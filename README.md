@@ -615,10 +615,10 @@ VITE_API_BASE_URL=https://your-backend-domain.com/api/v1
 
 ## Demo Links
 
-- GitHub Repository: `TODO`
-- Docker Hub Backend Image: `TODO`
-- Live Frontend URL: `TODO`
-- Live Backend API URL: `TODO`
+- GitHub Repository: `https://github.com/aditya-0670/inventory-order-management-system`
+- Docker Hub Backend Image: `TODO - optional image push not completed yet`
+- Live Frontend URL: `https://inventory-order-management-frontend.vercel.app`
+- Live Backend API URL: `https://inventory-order-backend-ehpp.onrender.com`
 
 ## Future Improvements
 
