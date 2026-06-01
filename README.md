@@ -358,7 +358,26 @@ Vite variables are baked into the static frontend build. If `VITE_API_BASE_URL` 
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate
+```
+
+Activate the virtual environment for your operating system:
+
+| Operating system / shell | Command |
+| --- | --- |
+| macOS / Linux | `source .venv/bin/activate` |
+| Windows PowerShell | `.venv\Scripts\Activate.ps1` |
+| Windows Command Prompt | `.venv\Scripts\activate.bat` |
+
+If PowerShell blocks script execution, allow it for the current terminal session only:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.venv\Scripts\Activate.ps1
+```
+
+Then install dependencies, run migrations, and start the API:
+
+```bash
 pip install -r requirements.txt
 alembic upgrade head
 uvicorn app.main:app --reload
@@ -560,22 +579,20 @@ Do not use `*` for production unless the assessment explicitly allows it.
 Build and push the backend image:
 
 ```bash
-docker build -t your-dockerhub-username/inventory-order-backend:latest ./backend
-docker push your-dockerhub-username/inventory-order-backend:latest
+docker build -t aditya0670/inventory-order-backend:latest ./backend
+docker push aditya0670/inventory-order-backend:latest
 ```
 
 Optional versioned release:
 
 ```bash
-docker tag your-dockerhub-username/inventory-order-backend:latest your-dockerhub-username/inventory-order-backend:v1.0.0
-docker push your-dockerhub-username/inventory-order-backend:v1.0.0
+docker tag aditya0670/inventory-order-backend:latest aditya0670/inventory-order-backend:v1.0.0
+docker push aditya0670/inventory-order-backend:v1.0.0
 ```
 
-Docker Hub backend image placeholder:
+Docker Hub backend image:
 
-```text
-your-dockerhub-username/inventory-order-backend:latest
-```
+[aditya0670/inventory-order-backend](https://hub.docker.com/repository/docker/aditya0670/inventory-order-backend/)
 
 ### Frontend Deployment
 
@@ -604,9 +621,31 @@ VITE_API_BASE_URL=https://your-backend-domain.com/api/v1
 ## Demo Links
 
 - GitHub Repository: `https://github.com/aditya-0670/inventory-order-management-system`
-- Docker Hub Backend Image: `TODO - optional image push not completed yet`
+- Docker Hub Backend Image: `https://hub.docker.com/repository/docker/aditya0670/inventory-order-backend/`
 - Live Frontend URL: `https://inventory-order-management-frontend.vercel.app`
 - Live Backend API URL: `https://inventory-order-backend-ehpp.onrender.com`
+
+## Screenshots
+
+### Dashboard
+
+![Dashboard summary with product, customer, order, and low-stock metrics](docs/screenshots/dashboard.png)
+
+### Product Management
+
+![Products page with product creation form and product list](docs/screenshots/products.png)
+
+### Customer Management
+
+![Customers page with phone-region selector and customer list](docs/screenshots/customers.png)
+
+### Order Management
+
+![Orders page with create-order workflow and order list](docs/screenshots/orders.png)
+
+### API Documentation
+
+![FastAPI Swagger documentation for product and customer endpoints](docs/screenshots/api-docs.png)
 
 ## Future Improvements
 
