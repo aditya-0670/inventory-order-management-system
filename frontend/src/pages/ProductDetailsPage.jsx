@@ -2,11 +2,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, CheckCircle, DollarSign, PackageCheck, Save, Trash2, XCircle } from "lucide-react";
 
 import { getApiErrorMessage } from "../api/client";
 import Button from "../components/common/Button.jsx";
 import Input from "../components/common/Input.jsx";
 import Loader from "../components/common/Loader.jsx";
+import StatusBadge from "../components/common/StatusBadge.jsx";
 import SkuInput from "../components/products/SkuInput.jsx";
 import { useToast } from "../components/common/Toast.jsx";
 import { useDeleteProduct, useProduct, useUpdateProduct } from "../hooks/useProducts";
@@ -88,28 +90,42 @@ export default function ProductDetailsPage() {
       <div className="page-header">
         <div>
           <Link className="text-link" to="/products">
+            <ArrowLeft aria-hidden="true" size={16} strokeWidth={2.3} />
             Back to products
           </Link>
           <h1>{product.name}</h1>
           <p>{product.sku}</p>
         </div>
-        <Button variant="danger" onClick={handleDelete} disabled={deleteProduct.isPending}>
+        <Button variant="danger" icon={Trash2} onClick={handleDelete} disabled={deleteProduct.isPending}>
           Delete product
         </Button>
       </div>
 
       <section className="metric-grid product-detail-metrics">
         <article className="metric metric-blue">
+          <div className="metric-icon" aria-hidden="true">
+            <DollarSign size={21} strokeWidth={2.3} />
+          </div>
           <span>Price</span>
           <strong>{formatCurrency(product.price)}</strong>
         </article>
         <article className="metric metric-teal">
+          <div className="metric-icon" aria-hidden="true">
+            <PackageCheck size={21} strokeWidth={2.3} />
+          </div>
           <span>Stock</span>
           <strong>{product.quantity_in_stock}</strong>
         </article>
         <article className="metric metric-amber">
+          <div className="metric-icon" aria-hidden="true">
+            {product.is_active ? <CheckCircle size={21} strokeWidth={2.3} /> : <XCircle size={21} strokeWidth={2.3} />}
+          </div>
           <span>Status</span>
-          <strong>{product.is_active ? "Active" : "Inactive"}</strong>
+          <strong>
+            <StatusBadge tone={product.is_active ? "success" : "neutral"} icon={product.is_active ? CheckCircle : XCircle}>
+              {product.is_active ? "Active" : "Inactive"}
+            </StatusBadge>
+          </strong>
         </article>
       </section>
 
@@ -164,7 +180,7 @@ export default function ProductDetailsPage() {
               {...register("quantity_in_stock")}
             />
             <div className="form-actions">
-              <Button type="submit" disabled={isSubmitting || updateProduct.isPending}>
+              <Button type="submit" icon={Save} disabled={isSubmitting || updateProduct.isPending}>
                 Update product
               </Button>
             </div>

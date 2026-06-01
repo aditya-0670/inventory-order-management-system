@@ -10,6 +10,10 @@ const apiClient = axios.create({
 export default apiClient;
 
 export function getApiErrorMessage(error) {
+  if (error?.code === "ERR_NETWORK" || error?.message === "Network Error") {
+    return "Unable to connect to the server. Please try again.";
+  }
+
   const apiError = error?.response?.data?.error;
   if (!apiError) {
     return error?.message || "Something went wrong";

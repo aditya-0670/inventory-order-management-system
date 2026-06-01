@@ -2,10 +2,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { AlertTriangle, CheckCircle, ClipboardList, Eye, Plus, Search, Trash2, XCircle } from "lucide-react";
 
 import { getApiErrorMessage } from "../api/client";
 import Button from "../components/common/Button.jsx";
+import ErrorState from "../components/common/ErrorState.jsx";
 import Loader from "../components/common/Loader.jsx";
+import StatusBadge from "../components/common/StatusBadge.jsx";
 import Table from "../components/common/Table.jsx";
 import { useToast } from "../components/common/Toast.jsx";
 import { useCustomers } from "../hooks/useCustomers";
@@ -51,11 +54,20 @@ function formatOrderSuccessMessage(order) {
   return `${orderLabel} placed successfully. Total amount: ${formattedTotal}.`;
 }
 
+function getOrderStatusBadge(status) {
+  if (status === "CANCELLED") {
+    return { tone: "neutral", icon: XCircle };
+  }
+
+  return { tone: "success", icon: CheckCircle };
+}
+
 export default function OrdersPage() {
   const [createdOrder, setCreatedOrder] = useState(null);
   const [orderFormMessage, setOrderFormMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const { showToast } = useToast();
-  const { data: orders = [], isLoading: ordersLoading, isError: ordersErrored, error: ordersError } = useOrders();
+  const { data: orders = [], isLoading: ordersLoading, isError: ordersErrored, error: ordersError, refetch: refetchOrders } = useOrders();
   const { data: customers = [], isLoading: customersLoading } = useCustomers();
   const { data: products = [], isLoading: productsLoading } = useProducts();
   const createOrder = useCreateOrder();
@@ -88,6 +100,19 @@ export default function OrdersPage() {
     const quantity = Number(item.quantity || 0);
     return sum + Number(product?.price ?? 0) * quantity;
   }, 0);
+  const filteredOrders = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    if (!query) {
+      return orders;
+    }
+
+    return orders.filter((order) =>
+      [`#${order.id}`, order.id, order.customer_id, order.status, order.total_amount].some((value) =>
+        String(value || "").toLowerCase().includes(query),
+      ),
+    );
+  }, [orders, searchTerm]);
   const orderItemsErrorMessage = errors.items?.message || errors.items?.root?.message;
 
   async function onSubmit(values) {
@@ -142,12 +167,19 @@ export default function OrdersPage() {
           <h1>Orders</h1>
           <p>Create orders, review totals, and cancel when needed.</p>
         </div>
+        <a className="button button-secondary" href="#order-form">
+          <Plus aria-hidden="true" size={16} strokeWidth={2.3} />
+          Create Order
+        </a>
       </div>
 
-      <section className="surface">
+      <section className="surface" id="order-form">
         <div className="section-header">
           <h2>Create Order</h2>
-          <strong>{formatCurrency(estimatedTotal)}</strong>
+          <div className="total-pill" aria-label={`Estimated subtotal ${formatCurrency(estimatedTotal)}`}>
+            <span>Estimated subtotal</span>
+            <strong>{formatCurrency(estimatedTotal)}</strong>
+          </div>
         </div>
         {customersLoading || productsLoading ? <Loader label="Loading order form data..." /> : null}
         <form className="order-form" onSubmit={handleSubmit(onSubmit)}>
@@ -221,13 +253,18 @@ export default function OrdersPage() {
           </div>
           {orderItemsErrorMessage ? <p className="notice error">{orderItemsErrorMessage}</p> : null}
           {orderFormMessage ? <p className="notice error">{orderFormMessage}</p> : null}
-          {allProductsSelected ? <p className="notice">{allProductsAddedMessage}</p> : null}
+          {allProductsSelected ? (
+            <p className="notice notice-inline">
+              <AlertTriangle aria-hidden="true" size={16} strokeWidth={2.3} />
+              <span>{allProductsAddedMessage}</span>
+            </p>
+          ) : null}
 
           <div className="form-actions">
-            <Button type="button" variant="secondary" onClick={handleAddProduct} disabled={formDisabled || allProductsSelected}>
+            <Button type="button" variant="secondary" icon={Plus} onClick={handleAddProduct} disabled={formDisabled || allProductsSelected}>
               Add product
             </Button>
-            <Button type="submit" disabled={formDisabled || isSubmitting}>
+            <Button type="submit" icon={ClipboardList} disabled={formDisabled || isSubmitting}>
               Place order
             </Button>
           </div>
@@ -242,16 +279,41 @@ export default function OrdersPage() {
       <section className="surface">
         <div className="section-header">
           <h2>Order List</h2>
+          <span className="section-meta">{orders.length === 1 ? "1 order" : `${orders.length} orders`}</span>
+        </div>
+        <div className="table-toolbar">
+          <label className="search-field" htmlFor="orders-search">
+            <Search aria-hidden="true" size={16} strokeWidth={2.3} />
+            <span className="sr-only">Search orders</span>
+            <input
+              id="orders-search"
+              className="input"
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search by order, customer, status, or total"
+              type="search"
+              value={searchTerm}
+            />
+          </label>
+          <Button type="button" variant="ghost" onClick={() => refetchOrders()}>
+            Refresh
+          </Button>
         </div>
         {ordersLoading ? <Loader label="Loading orders..." /> : null}
-        {ordersErrored ? <p className="notice error">{getApiErrorMessage(ordersError)}</p> : null}
+        {ordersErrored ? <ErrorState message={getApiErrorMessage(ordersError)} onRetry={() => refetchOrders()} /> : null}
         {!ordersLoading && !ordersErrored ? (
           <Table
             columns={[
               { key: "id", header: "Order" },
               { key: "customer_id", header: "Customer ID" },
               { key: "total_amount", header: "Total", render: (order) => formatCurrency(order.total_amount) },
-              { key: "status", header: "Status", render: (order) => <span className={`status status-${order.status.toLowerCase()}`}>{order.status}</span> },
+              {
+                key: "status",
+                header: "Status",
+                render: (order) => {
+                  const badge = getOrderStatusBadge(order.status);
+                  return <StatusBadge tone={badge.tone} icon={badge.icon}>{order.status}</StatusBadge>;
+                },
+              },
               { key: "created_at", header: "Created", render: (order) => formatDate(order.created_at) },
               {
                 key: "actions",
@@ -259,17 +321,18 @@ export default function OrdersPage() {
                 render: (order) => (
                   <div className="row-actions">
                     <Link className="button button-secondary" to={`/orders/${order.id}`}>
+                      <Eye aria-hidden="true" size={16} strokeWidth={2.3} />
                       View
                     </Link>
-                    <Button variant="danger" disabled={order.status === "CANCELLED"} onClick={() => handleCancel(order)}>
+                    <Button variant="danger" icon={Trash2} disabled={order.status === "CANCELLED"} onClick={() => handleCancel(order)}>
                       Cancel
                     </Button>
                   </div>
                 ),
               },
             ]}
-            rows={orders}
-            emptyMessage="No orders yet"
+            rows={filteredOrders}
+            emptyMessage={searchTerm ? "No orders match your search" : "No orders yet. Create your first order."}
           />
         ) : null}
       </section>

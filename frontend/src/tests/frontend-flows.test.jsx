@@ -23,12 +23,38 @@ describe("frontend flows", () => {
     expect(screen.getByText("LAPTOP-001")).toBeInTheDocument();
   });
 
+  it("main navigation renders core sections", async () => {
+    renderApp("/dashboard");
+
+    const navigation = screen.getByRole("navigation", { name: /main navigation/i });
+
+    expect(within(navigation).getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
+    expect(within(navigation).getByRole("link", { name: /products/i })).toBeInTheDocument();
+    expect(within(navigation).getByRole("link", { name: /customers/i })).toBeInTheDocument();
+    expect(within(navigation).getByRole("link", { name: /orders/i })).toBeInTheDocument();
+  });
+
   it("products page renders product list", async () => {
     renderApp("/products");
 
     expect(await screen.findByText("Laptop")).toBeInTheDocument();
     expect(screen.getByText("Keyboard")).toBeInTheDocument();
     expect(screen.getByText("LAPTOP-001")).toBeInTheDocument();
+  });
+
+  it("products page shows stock status badges", async () => {
+    renderApp("/products");
+
+    expect(await screen.findByText("Low Stock")).toBeInTheDocument();
+    expect(screen.getByText("In Stock")).toBeInTheDocument();
+  });
+
+  it("products page shows an empty state when no records exist", async () => {
+    server.use(http.get(`${API_BASE_URL}/products`, () => HttpResponse.json([])));
+
+    renderApp("/products");
+
+    expect(await screen.findByText("No products yet. Add your first product to start tracking inventory.")).toBeInTheDocument();
   });
 
   it("product detail page loads and updates a product", async () => {

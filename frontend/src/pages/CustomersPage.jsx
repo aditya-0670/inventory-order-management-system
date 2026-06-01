@@ -1,9 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { Eye, Mail, Plus, Search, Trash2, UserRound } from "lucide-react";
 
 import { getApiErrorMessage } from "../api/client";
 import Button from "../components/common/Button.jsx";
+import ErrorState from "../components/common/ErrorState.jsx";
 import Input from "../components/common/Input.jsx";
 import Loader from "../components/common/Loader.jsx";
 import PhoneNumberInput from "../components/common/PhoneNumberInput.jsx";
@@ -15,8 +18,9 @@ import { validateAndFormatPhoneNumber } from "../utils/phoneNumber";
 import { customerSchema, getCustomerFormDefaultValues } from "../utils/validators";
 
 export default function CustomersPage() {
+  const [searchTerm, setSearchTerm] = useState("");
   const { showToast } = useToast();
-  const { data: customers = [], isLoading, isError, error } = useCustomers();
+  const { data: customers = [], isLoading, isError, error, refetch } = useCustomers();
   const createCustomer = useCreateCustomer();
   const deleteCustomer = useDeleteCustomer();
   const {
@@ -29,6 +33,17 @@ export default function CustomersPage() {
     resolver: zodResolver(customerSchema),
     defaultValues: getCustomerFormDefaultValues(),
   });
+  const filteredCustomers = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    if (!query) {
+      return customers;
+    }
+
+    return customers.filter((customer) =>
+      [customer.full_name, customer.email, customer.phone_number].some((value) => String(value || "").toLowerCase().includes(query)),
+    );
+  }, [customers, searchTerm]);
 
   async function onSubmit(values) {
     try {
@@ -65,9 +80,13 @@ export default function CustomersPage() {
           <h1>Customers</h1>
           <p>Maintain customer records used by order workflows.</p>
         </div>
+        <a className="button button-secondary" href="#customer-form">
+          <Plus aria-hidden="true" size={16} strokeWidth={2.3} />
+          Add Customer
+        </a>
       </div>
 
-      <section className="surface">
+      <section className="surface" id="customer-form">
         <div className="section-header">
           <h2>Add Customer</h2>
         </div>
@@ -86,9 +105,27 @@ export default function CustomersPage() {
       <section className="surface">
         <div className="section-header">
           <h2>Customer List</h2>
+          <span className="section-meta">{customers.length === 1 ? "1 customer" : `${customers.length} customers`}</span>
+        </div>
+        <div className="table-toolbar">
+          <label className="search-field" htmlFor="customers-search">
+            <Search aria-hidden="true" size={16} strokeWidth={2.3} />
+            <span className="sr-only">Search customers</span>
+            <input
+              id="customers-search"
+              className="input"
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search by name, email, or phone"
+              type="search"
+              value={searchTerm}
+            />
+          </label>
+          <Button type="button" variant="ghost" onClick={() => refetch()}>
+            Refresh
+          </Button>
         </div>
         {isLoading ? <Loader label="Loading customers..." /> : null}
-        {isError ? <p className="notice error">{getApiErrorMessage(error)}</p> : null}
+        {isError ? <ErrorState message={getApiErrorMessage(error)} onRetry={() => refetch()} /> : null}
         {!isLoading && !isError ? (
           <Table
             columns={[
@@ -101,8 +138,26 @@ export default function CustomersPage() {
                   </Link>
                 ),
               },
-              { key: "email", header: "Email" },
-              { key: "phone_number", header: "Phone" },
+              {
+                key: "email",
+                header: "Email",
+                render: (customer) => (
+                  <a className="table-inline-link" href={`mailto:${customer.email}`}>
+                    <Mail aria-hidden="true" size={15} strokeWidth={2.3} />
+                    {customer.email}
+                  </a>
+                ),
+              },
+              {
+                key: "phone_number",
+                header: "Phone",
+                render: (customer) => (
+                  <span className="table-inline-link table-inline-muted">
+                    <UserRound aria-hidden="true" size={15} strokeWidth={2.3} />
+                    {customer.phone_number}
+                  </span>
+                ),
+              },
               { key: "created_at", header: "Created", render: (customer) => formatDate(customer.created_at) },
               {
                 key: "actions",
@@ -110,17 +165,18 @@ export default function CustomersPage() {
                 render: (customer) => (
                   <div className="row-actions">
                     <Link className="button button-ghost" to={`/customers/${customer.id}`}>
+                      <Eye aria-hidden="true" size={16} strokeWidth={2.3} />
                       View
                     </Link>
-                    <Button variant="danger" onClick={() => handleDelete(customer)}>
+                    <Button variant="danger" icon={Trash2} onClick={() => handleDelete(customer)}>
                       Delete
                     </Button>
                   </div>
                 ),
               },
             ]}
-            rows={customers}
-            emptyMessage="No customers yet"
+            rows={filteredCustomers}
+            emptyMessage={searchTerm ? "No customers match your search" : "No customers yet. Add a customer to create orders."}
           />
         ) : null}
       </section>

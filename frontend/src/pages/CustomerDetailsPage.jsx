@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Mail, Phone, Save, Trash2, UserRound } from "lucide-react";
 
 import { getApiErrorMessage } from "../api/client";
 import Button from "../components/common/Button.jsx";
@@ -89,12 +90,13 @@ export default function CustomerDetailsPage() {
       <div className="page-header">
         <div>
           <Link className="text-link" to="/customers">
+            <ArrowLeft aria-hidden="true" size={16} strokeWidth={2.3} />
             Back to customers
           </Link>
           <h1>{customer.full_name}</h1>
           <p>{customer.email}</p>
         </div>
-        <Button variant="danger" onClick={handleDelete} disabled={deleteCustomer.isPending}>
+        <Button variant="danger" icon={Trash2} onClick={handleDelete} disabled={deleteCustomer.isPending}>
           Delete customer
         </Button>
       </div>
@@ -110,19 +112,26 @@ export default function CustomerDetailsPage() {
           </div>
           <div>
             <dt>Full name</dt>
-            <dd>{customer.full_name}</dd>
+            <dd className="detail-inline">
+              <UserRound aria-hidden="true" size={16} strokeWidth={2.3} />
+              {customer.full_name}
+            </dd>
           </div>
           <div>
             <dt>Email</dt>
             <dd>
               <a className="text-link" href={`mailto:${customer.email}`}>
+                <Mail aria-hidden="true" size={16} strokeWidth={2.3} />
                 {customer.email}
               </a>
             </dd>
           </div>
           <div>
             <dt>Phone</dt>
-            <dd>{customer.phone_number}</dd>
+            <dd className="detail-inline">
+              <Phone aria-hidden="true" size={16} strokeWidth={2.3} />
+              {customer.phone_number}
+            </dd>
           </div>
           <div>
             <dt>Created</dt>
@@ -144,7 +153,7 @@ export default function CustomerDetailsPage() {
           <Input label="Email" id="customer-detail-email" type="email" error={errors.email?.message} {...register("email")} />
           <PhoneNumberInput control={control} />
           <div className="form-actions">
-            <Button type="submit" disabled={isSubmitting || updateCustomer.isPending}>
+            <Button type="submit" icon={Save} disabled={isSubmitting || updateCustomer.isPending}>
               Update customer
             </Button>
           </div>

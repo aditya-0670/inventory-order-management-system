@@ -1,3 +1,5 @@
+import EmptyState from "./EmptyState.jsx";
+
 export default function Table({ columns, rows, emptyMessage = "No records found" }) {
   return (
     <div className="table-wrap">
@@ -13,7 +15,7 @@ export default function Table({ columns, rows, emptyMessage = "No records found"
           {rows.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="table-empty">
-                {emptyMessage}
+                <EmptyState title={emptyMessage} />
               </td>
             </tr>
           ) : (
