@@ -44,6 +44,20 @@ The project is built as a clean modular monolith with a FastAPI backend, React f
   - Backend and frontend test suites.
   - Full Docker Compose stack.
 
+## Notable Assessment Enhancements
+
+These features go beyond the minimum CRUD flow while staying scoped to a clean modular monolith.
+
+| Enhancement | What It Adds | Implementation Notes |
+| --- | --- | --- |
+| Smart SKU Suggestion System | Suggests readable, available SKUs from a product name. | Rule-based and deterministic, not AI-based. Backend generates and validates suggestions; frontend shows the first two suggestions and still allows manual SKUs. Product creation and update continue to enforce uniqueness in the backend and database. |
+| SKU Availability Checks | Warns users before submitting duplicate SKUs. | Supports edit mode with `exclude_product_id`, so the current product's SKU is not incorrectly marked as taken. |
+| Country-Aware Phone Input | Users select a country/region code, then enter the national phone number. | Frontend uses `libphonenumber-js`; backend uses `phonenumbers`. Stored values are normalized to E.164 strings. No fixed 10-digit rule and no phone-number uniqueness constraint. |
+| Customer and Product Detail Views | Users can open individual records from list pages. | Supports required `GET /products/{id}` and `GET /customers/{id}` flows from the UI. |
+| Duplicate Order Item Protection | Prevents selecting the same product multiple times in one order. | Frontend disables already-selected products in other rows; backend rejects duplicate product IDs as validation safety. |
+| Transactional Inventory Logic | Keeps stock and order records consistent. | Failed order creation rolls back completely; successful order creation reduces stock; cancellation restores stock. |
+| Deployment Hardening | Production-ready Render/Vercel/Docker setup. | Includes Render PostgreSQL, Render backend, Vercel frontend, Docker Compose, Docker Hub image, health checks, CORS configuration, and README deployment docs. |
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -635,9 +649,15 @@ VITE_API_BASE_URL=https://your-backend-domain.com/api/v1
 
 ![Products page with product creation form and product list](docs/screenshots/products.png)
 
+### Smart SKU Suggestions
+
+![Product form showing deterministic SKU suggestions generated from product name](docs/screenshots/sku-suggestions.png)
+
 ### Customer Management
 
 ![Customers page with phone-region selector and customer list](docs/screenshots/customers.png)
+
+The customer form separates the country/region code from the local phone number so values can be validated by region and stored in E.164 format.
 
 ### Order Management
 
