@@ -2,9 +2,7 @@
 .env.*
 !.env.example
 
-AGENTS.md
 PROJECT_PLAN.md
-project_plan.md
 Resources/
 
 __pycache__/
