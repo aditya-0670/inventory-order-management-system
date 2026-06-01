@@ -54,7 +54,7 @@ The project is built as a clean modular monolith with a FastAPI backend, React f
 | Testing | pytest, Vitest, React Testing Library, MSW |
 | Logging/Monitoring | Structured console logs, request ID middleware, health/readiness/metrics endpoints |
 | Containerization | Docker, Docker Compose |
-| Deployment Targets | Render, Railway, Fly.io, Vercel, Netlify, Docker Hub |
+| Deployment Targets | Render, Vercel, Docker Hub |
 
 ## Architecture
 
@@ -601,18 +601,6 @@ Set the frontend production variable:
 VITE_API_BASE_URL=https://your-backend-domain.com/api/v1
 ```
 
-### Deployment Checklist
-
-- Backend tests pass.
-- Frontend tests pass.
-- Docker stack starts with `docker compose up --build`.
-- PostgreSQL database is provisioned.
-- Alembic migrations have run.
-- Backend `/health` returns OK.
-- Backend `/ready` confirms database connectivity.
-- Frontend can call the backend without CORS errors.
-- Demo links are updated below.
-
 ## Demo Links
 
 - GitHub Repository: `https://github.com/aditya-0670/inventory-order-management-system`
@@ -631,4 +619,3 @@ VITE_API_BASE_URL=https://your-backend-domain.com/api/v1
 - Background jobs for reporting and scheduled inventory checks.
 - Production observability with hosted logs, metrics, and alerts.
 - End-to-end tests with Playwright or Cypress.
-- CI/CD pipeline for tests, image builds, and deployment.
